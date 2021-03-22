@@ -1,0 +1,78 @@
+---
+title: "Data Challenge One"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+library(readxl)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(readtext)
+library(tidytext)
+#making interactive bar plot of proportion of registered republicans by street
+library(plotly)
+```
+
+```{r}
+# read in voter registration data
+voters <- read_xls("~/SDS-235/Data-Challenge-One/Voter Registry/Voter Registry.xls")
+```
+
+Ideally, tidy the PARTY column so that there are three categories: DEMOCRAT, REPUBLICAN, and INDEPENDENT.
+
+```{r}
+ggplot(data = voters, mapping = aes(x = PARTY, fill = PARTY)) + geom_bar()
+```
+
+```{r}
+#make sure to put your own file pathway in
+articles <- readtext(paste0("~/SDS-235/Data-Challenge-One/News Articles"), encoding = "LATIN1")
+```
+
+```{r}
+# separate text into words, filter out common words that aren't informative
+articles_words <- articles %>% 
+  unnest_tokens(word, text) %>% 
+  count(doc_id, word, sort = TRUE) %>% 
+  filter(word != 'the' & word != 'a' & word != 'to' & word != 'and')
+```
+
+```{r}
+# dataframe for totals of each word
+word_totals <- articles_words %>% 
+  group_by(word) %>% 
+  summarize(total = sum(n))
+```
+
+```{r}
+#looking at voter registration by party overtime, from beginning of 2002
+voters_recent <- voters %>%
+  filter(`VOTER REG DATE`>= '2004-01-01')
+  
+ggplot(data = voters_recent, mapping = aes(x = `VOTER REG DATE`, fill = as.factor(PARTY))) +
+  geom_boxplot() +
+  labs(title = 'voter registration by party in 2004')
+```
+
+```{r}
+voters_streets <- voters %>%
+  mutate(num_repubs = if_else(PARTY == 'REPUBLICAN', 1, 0)) %>%
+  mutate(total_num = 1) %>% 
+  group_by(`STREET NAME`) %>%
+  summarize(proportion = sum(num_repubs)/sum(total_num))
+```
+
+```{r}
+p2 <- voters_streets %>%
+  plot_ly(x = ~`STREET NAME`, y = ~proportion) %>% 
+  add_bars()
+
+p2
+```
