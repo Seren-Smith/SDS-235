@@ -1,0 +1,209 @@
+---
+title: "exploratory_data_analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+```
+
+```{r}
+comm_fri <- read_csv("~/SDS-235/Data-Challenge-Two/DC2-data/Communication Data/comm-data-Fri.csv")
+
+comm_sat <- read_csv("~/SDS-235/Data-Challenge-Two/DC2-data/Communication Data/comm-data-Sat.csv")
+
+comm_sun <- read_csv("~/SDS-235/Data-Challenge-Two/DC2-data/Communication Data/comm-data-Sun.csv")
+```
+
+```{r}
+ggplot(data = comm_fri, mapping = aes(x = location, fill = location)) + geom_bar()
+```
+
+```{r}
+ggplot(data = comm_sat, mapping = aes(x = location, fill = location)) + geom_bar()
+```
+
+```{r}
+ggplot(data = comm_sun, mapping = aes(x = location, fill = location)) + geom_bar()
+```
+Joining Comm-Fri, Comm-Sat, Comm-Sun together
+```{r}
+comm_fri_sat <- full_join(comm_fri, comm_sat)
+comm_full <- full_join(comm_fri_sat, comm_sun)
+```
+
+Our next step is extracting a date from comm_full's Timestamp column, so we can show a facet_wrap by date.
+
+```{r}
+comm_full <- mutate(comm_full, date = substring(comm_full$Timestamp, 0, 9))
+```
+
+For Friday:
+```{r}
+comm_fri_t <- mutate(comm_fri, Date = substring(comm_fri$Timestamp, 0, 9))
+comm_fri_t <- mutate(comm_fri_t, Time = substring(comm_fri_t$Timestamp, 11, 18))
+comm_fri_t <- mutate(comm_fri_t, hour = substring(comm_fri_t$Time, 0, 2))
+comm_fri_t <- mutate(comm_fri_t, minute = substring(comm_fri_t$Time, 4, 5))
+comm_fri_t <- mutate(comm_fri_t, sec = substring(comm_fri_t$Time, 7, 8))
+
+comm_fri_t$hour <- as.integer(comm_fri_t$hour)
+comm_fri_t$minute <- as.integer(comm_fri_t$minute)
+comm_fri_t$sec <- as.integer(comm_fri_t$sec)
+```
+
+For Saturday:
+```{r}
+comm_sat_t <- mutate(comm_sat, Date = substring(comm_sat$Timestamp, 0, 9))
+comm_sat_t <- mutate(comm_sat_t, Time = substring(comm_sat_t$Timestamp, 11, 18))
+comm_sat_t <- mutate(comm_sat_t, hour = substring(comm_sat_t$Time, 0, 2))
+comm_sat_t <- mutate(comm_sat_t, minute = substring(comm_sat_t$Time, 4, 5))
+comm_sat_t <- mutate(comm_sat_t, sec = substring(comm_sat_t$Time, 7, 8))
+
+comm_sat_t$hour <- as.integer(comm_sat_t$hour)
+comm_sat_t$minute <- as.integer(comm_sat_t$minute)
+comm_sat_t$sec <- as.integer(comm_sat_t$sec)
+```
+
+For Sunday:
+```{r}
+comm_sun_t <- mutate(comm_sun, Date = substring(comm_sun$Timestamp, 0, 9))
+comm_sun_t <- mutate(comm_sun_t, Time = substring(comm_sun_t$Timestamp, 11, 18))
+comm_sun_t <- mutate(comm_sun_t, hour = substring(comm_sun_t$Time, 0, 2))
+comm_sun_t <- mutate(comm_sun_t, minute = substring(comm_sun_t$Time, 4, 5))
+comm_sun_t <- mutate(comm_sun_t, sec = substring(comm_sun_t$Time, 7, 8))
+
+comm_sun_t$hour <- as.integer(comm_sun_t$hour)
+comm_sun_t$minute <- as.integer(comm_sun_t$minute)
+comm_sun_t$sec <- as.integer(comm_sun_t$sec)
+```
+
+```{r}
+comm_fri_sat_t <- full_join(comm_fri_t, comm_sat_t)
+comm_full_t <- full_join(comm_fri_sat_t, comm_sun_t)
+```
+
+
+```{r}
+ggplot(data = comm_full_t, mapping = aes(x = location, fill = location)) + 
+  facet_wrap(~Date) +
+  geom_bar() +
+  labs(title = "Communication Data by Location")
+```
+
+```{r}
+comm_full_coaster_alley_t <- filter(comm_full_t, location == "Coaster Alley")
+comm_full_coaster_alley_t
+```
+
+```{r}
+ggplot(data = comm_full_coaster_alley_t, mapping = aes(x = hour)) + 
+  facet_wrap(~Date) +
+  geom_bar(width = 0.3, fill = "red") +
+  labs(title = "Communication Data at Coaster Alley", subtitle = "By Date and By Hour")
+```
+
+
+```{r}
+movement_fri <- read_csv("~/SDS-235/Data-Challenge-Two/DC2-data/Movement Data/park-movement-Fri.csv")
+
+movement_sat <- read_csv("~/SDS-235/Data-Challenge-Two/DC2-data/Movement Data/park-movement-Sat.csv")
+
+movement_sun <- read_csv("~/SDS-235/Data-Challenge-Two/DC2-data/Movement Data/park-movement-Sun.csv")
+```
+
+```{r}
+movement_fri_sat <- full_join(movement_fri, movement_sat)
+movement_full <- full_join(movement_fri_sat, movement_sun)
+```
+```{r}
+movement_sun_t <- mutate(movement_sun, Date = substring(movement_sun$Timestamp, 0, 9))
+movement_sun_t <- mutate(movement_sun_t, Time = substring(movement_sun_t$Timestamp, 11, 18))
+movement_sun_t <- mutate(movement_sun_t, hour = substring(movement_sun_t$Time, 0, 2))
+movement_sun_t <- mutate(movement_sun_t, minute = substring(movement_sun_t$Time, 4, 5))
+movement_sun_t <- mutate(movement_sun_t, sec = substring(movement_sun_t$Time, 7, 8))
+
+movement_sun_t$hour <- as.integer(movement_sun_t$hour)
+movement_sun_t$minute <- as.integer(movement_sun_t$minute)
+movement_sun_t$sec <- as.integer(movement_sun_t$sec)
+```
+
+
+```{r}
+movement_suspect_t <- filter(movement_sun_t, id == "1983765")
+movement_suspect_t
+```
+
+```{r}
+library(gganimate)
+library(magick)
+```
+
+```{r}
+ggplot(subset(movement_suspect_t, hour %in% c(9, 10)), aes(X, Y)) +
+geom_point() +
+  theme_minimal()
+```
+
+
+```{r}
+animation_please <- ggplot(subset(movement_suspect_t, hour %in% c(9, 10)), aes(X, Y)) +
+geom_point() +
+theme_minimal() +
+## gganimate functionality starts here
+labs(title = "Sunday 9:{closest_state}") +
+transition_states(minute) +
+ease_aes("cubic-in-out")
+
+# Run animation  
+animate(animation_please, fps = 10, renderer = magick_renderer())
+
+# Save animation
+anim_save("sun_sus9.gif", animation = last_animation())
+```
+
+```{r}
+animation_please <- ggplot(subset(movement_suspect_t, hour %in% c(10, 11)), aes(X, Y)) +
+geom_point() +
+theme_minimal() +
+## gganimate functionality starts here
+labs(title = "Sunday 10:{closest_state}") +
+transition_states(minute) +
+ease_aes("cubic-in-out")
+
+# Run animation  
+animate(animation_please, fps = 10, renderer = magick_renderer())
+
+# Save animation
+anim_save("sun_sus10.gif", animation = last_animation())
+```
+
+```{r}
+animation_please <- ggplot(subset(movement_suspect_t, hour %in% c(11, 12)), aes(X, Y)) +
+geom_point() +
+theme_minimal() +
+## gganimate functionality starts here
+labs(title = "Sunday 11:{closest_state}") +
+transition_states(minute) +
+ease_aes("cubic-in-out")
+
+# Run animation  
+animate(animation_please, fps = 10, renderer = magick_renderer())
+
+# Save animation
+anim_save("sun_sus11.gif", animation = last_animation())
+```
+
+Join together movement + comm data:
+```{r}
+#movement_comm_full <- full_join(movement_full, comm_full)
+```
+
+```{r}
+#movement_comm_full
+```
